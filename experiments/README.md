@@ -67,5 +67,7 @@ All changes followed AGENTS: re-read required md first, todo, context_record, po
 
 See GPUOS-Baseline-Documented-Arc-2026-06.md and vault for the full arc (this testing closes the "how we track the road" gap).
 
+**Live tested (on feat/testing-infra-dashboard-scrapped-polling, pushed to jwgale/GPUOS):** Ran AGENTS Test & Dashboard commands + direct. Harness: PASS, baseline showed internal [VRAM] 0 delta + "5 ms" + sync counters + "FINAL (baseline only)" clean exit 0 + logs. Dashboard data: 34+ rows, agent-ranking (recall e.g. 0.5) + jit-baseline (5ms, 0 vram) tracks from internal only. Demo --log: showed "on the board" + logged. Direct jit: confirmed 0 delta + FINAL. (Graceful paths in no-torch env; real scheduler in torch+ext env.) git diff reviewed; changes documented in commit 1e25070 + this note. See plan.md for details.
+
 ## Status
 Built as part of "figure out testing + suite + build missing for subsequent phases". Run the harness + dashboard to see it live with your Phase0/1 + agent data.
