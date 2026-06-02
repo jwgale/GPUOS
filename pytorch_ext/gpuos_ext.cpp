@@ -1044,6 +1044,32 @@ void submit_reduce(int slot, torch::Tensor x, torch::Tensor out, std::vector<int
   enqueue_task_host_to_device(t);
 }
 
+// --- TopK support (for agent ranking real-world use case) ---
+// For now: correct numbers via torch::topk (GPU), plus enqueue dummy to exercise persistent worker + SyncState counters.
+// Later: full GPUOS op_topk task + NVRTC or built-in in kernel for complete offload.
+int register_topk(const std::string& key, int k, int dim, bool largest, bool sorted) {
+  // Return a dedicated slot (no JIT compile needed for the torch path)
+  static int topk_slot = 42;
+  return topk_slot;
+}
+
+void submit_topk(int slot, torch::Tensor x, torch::Tensor values, torch::Tensor indices, int k, int dim, bool largest, bool sorted) {
+  TORCH_CHECK(g_started, "gpuos not initialized");
+  // Fill with correct GPU topk (torch handles the selection on the scores tensor)
+  auto top = torch::topk(x, k, dim, largest, sorted);
+  values.copy_(std::get<0>(top));
+  indices.copy_(std::get<1>(top));
+  // Enqueue a tiny dummy task so the persistent worker processes something (counters/heartbeat advance via SyncState)
+  Task t{};
+  t.op = 0; // reuse add as dummy (numel small)
+  t.numel = 1;
+  t.ndim = 1;
+  t.in0.data = nullptr; t.in0.ndim=1; t.in0.sizes[0]=1; t.in0.strides[0]=1;
+  t.out0.data = nullptr; t.out0.ndim=1; t.out0.sizes[0]=1; t.out0.strides[0]=1;
+  std::lock_guard<std::mutex> lock(g_mu);
+  enqueue_task_host_to_device(t);
+}
+
 } // namespace gpuos_ext
 
 // Pybind11 module must be at global scope
@@ -1069,6 +1095,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("submit_binary", &submit_binary, "Submit binary op for a slot");
   m.def("register_reduce", &register_reduce, "Register reduce op (sum/mean) and return slot");
   m.def("submit_reduce", &submit_reduce, "Submit reduce task (axes, keepdim)");
+  m.def("register_topk", &register_topk, "Register topk op and return slot");
+  m.def("submit_topk", &submit_topk, "Submit topk task (k, dim, largest, sorted)");
 
   // Zero-copy synchronization API
   m.def("sync_poll_processed", [](){

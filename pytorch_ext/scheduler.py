@@ -342,6 +342,33 @@ class _GPUOSSchedulerMode(torch.utils._python_dispatch.TorchDispatchMode):
             self.pending.add(out.data_ptr())
             return out
 
+        # TopK: for agent ranking use case (select top k scores)
+        elif name == 'aten::topk':
+            x = args[0]
+            if torch.is_grad_enabled() or not x.is_cuda or x.numel() > self.size_threshold:
+                return func(*args, **(kwargs or {}))
+            if _DISABLE_JIT:
+                return func(*args, **(kwargs or {}))
+            k = int(args[1]) if len(args) > 1 else int((kwargs or {}).get('k', 1))
+            dim = (kwargs or {}).get('dim', -1)
+            largest = bool((kwargs or {}).get('largest', True))
+            sorted_ = bool((kwargs or {}).get('sorted', True))
+            if dim is None:
+                dim = -1
+            if dim < 0:
+                dim += x.dim()
+            # output shapes (k along dim)
+            out_shape = list(x.shape)
+            out_shape[dim] = k
+            values = torch.empty(out_shape, dtype=x.dtype, device=x.device)
+            indices = torch.empty(out_shape, dtype=torch.long, device=x.device)
+            key = f"topk|k={k}|dim={dim}|largest={int(largest)}|sorted={int(sorted_)}|{str(x.dtype)}"
+            slot = gpuos_ext.register_topk(key, k, dim, largest, sorted_)
+            gpuos_ext.submit_topk(slot, x, values, indices, k, dim, largest, sorted_)
+            self.pending.add(values.data_ptr())
+            self.pending.add(indices.data_ptr())
+            return values, indices
+
         # Fallback to default behavior
         return func(*args, **(kwargs or {}))
 

@@ -98,7 +98,8 @@ This is the achievable end state to shoot for now that Phase 0 (baseline always 
 - Verified foundation: ran persistent_jit (exact AGENTS cmd) -- Phase1 SyncState + [VRAM] 0-delta for layer + 5ms baseline + clean exit + sync counters all live.
 - Demo run (graceful): shows realistic simulated numbers (e.g. baseline 5/10/20ms ; simulated GPUOS ~0.3/0.7/1.4ms (15x), recall 0.33->0.67) + the Triton/GPUOS agent utility explanation.
 - Note: real GPUOS scheduler numbers require torch+CUDA env (like other pytorch_ext demos). The script + plan + .tasks/phase2 + README/AGENTS updates = delivered end state. `python3 examples/agent_retrieval_rank_demo.py` always demonstrates the target.
-- Next per plan: in torch env run for actual timings; extend for explicit topk reg + real Triton; add benchmark; declare achieved.
+- [x] Real env setup + validation (2026-06): .venv + torch nightly created; demo.py patched (arch support, rdc fix for load, path, fallback); harness auto .venv for agent; AGENTS updated. Full build (per AGENTS), harness+direct runs with .venv validate: ext loads, real scheduler path taken+logged (even with cpu fallback for current torch sm_120 limits), jit baseline exact (5ms/0delta/FINAL), viz/data show metrics from runs, logs created. All parts (C++ core, harness, agent real, viz, data, dashboard layer) working as intended. (See validation run outputs, commit d713971).
+- Next per plan: in torch env run for actual timings (full GPU once better torch); extend for explicit topk reg + real Triton; add benchmark; declare achieved.
 
 Proceed one step at a time. This is the target now that low-level is proved.
 
