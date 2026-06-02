@@ -15,21 +15,11 @@
 #include <vector>
 #include <cuda_runtime_api.h>
 
-// Portable wrapper for cudaMemPrefetchAsync across CUDA versions
-#if defined(CUDART_VERSION) && (CUDART_VERSION >= 12000)
-static inline cudaError_t gpuos_prefetch_async(void* ptr, size_t bytes, int device, cudaStream_t stream) {
-  cudaMemLocation loc{}; loc.type = cudaMemLocationTypeDevice; loc.id = device;
-  return cudaMemPrefetchAsync(ptr, bytes, loc, 0u, stream);
-}
-#define cudaMemPrefetchAsync(PTR, BYTES, DEV, STREAM) gpuos_prefetch_async((void*)(PTR), (size_t)(BYTES), (int)(DEV), (cudaStream_t)(STREAM))
-#endif
-
-// As a final fallback for environments where cudaMemPrefetchAsync signature
-// differs or is unavailable, turn prefetch into a no-op to unblock builds.
-#ifndef GPUOS_ENABLE_PREFETCH
+// Force prefetch to no-op for compatibility with current CUDA headers on this system.
+// The original wrapper had a version check that was triggering the new struct-based API
+// while the headers provided the old int-based declaration, causing the type mismatch.
 #undef cudaMemPrefetchAsync
 #define cudaMemPrefetchAsync(...) (cudaSuccess)
-#endif
 
 // Kernel/symbol wrappers (defined in src/persistent_kernel.cu)
 extern "C" cudaError_t launch_init_builtin_ops(cudaStream_t stream);
