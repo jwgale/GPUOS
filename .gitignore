@@ -1,1 +1,3 @@
-build
+buildexperiments/results/*.json
+
+experiments/results/*.json

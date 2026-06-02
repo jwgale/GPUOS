@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    container_name: transformer-vm-experiments-surreal
+    ports:
+      - "8001:8000"
+    command: >
+      start --user root --pass root
+      rocksdb:/data/surreal.db
+    user: "0"
+    volumes:
+      - /tmp/surreal-experiments-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "surreal", "version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+

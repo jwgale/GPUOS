@@ -5,7 +5,8 @@ GPUOS (Persistent Kernel + JIT-Injected Operators for CUDA) - Research into low-
 
 Target: ≤10% VRAM overhead for instrumentation.
 
-Current focus (as of 2026-06): Phase 0 Exploration & Baseline on RTX 5090 (Blackwell, compute 12.0).
+Current focus (as of 2026-06): Phase 1 - Minimal Atomic Counter Layer (SyncState zero-copy wiring in persistent_jit) + re-measure on RTX 5090 (Blackwell, compute 12.0).
+(Phase 0 baseline + granular debug complete: always 5-7ms + clean exit via force block; post-launch cuModuleLoadDataEx hang diagnosed but protected.)
 
 ## Key Locked Decisions & Conventions
 - Use `compute_120` for NVRTC on RTX 5090: `export GPUOS_NVRTC_ARCH=compute_120`
@@ -31,10 +32,23 @@ export GPUOS_NVRTC_ARCH=compute_120
 timeout 30 ./persistent_jit || echo "=== TIMEOUT ==="
 ```
 
-Monitor VRAM in another terminal:
+## Test & Dashboard Commands (for subsequent phases, agent end-state, reliability)
 ```bash
-nvidia-smi --query-gpu=memory.used,memory.total --format=csv -l 1
+# Full harness (jit baseline always protected + clean exit, agent demo, py tests, logs to experiments/results/)
+python experiments/run_all_gpuos_tests.py --include-jit --include-agent --timeout 60
+
+# Dashboard (Streamlit, local JSON + bench results; port 8502; like sudoku-era for Percepta)
+cd experiments
+./start_gpuos_dashboard.sh
+# then browse http://localhost:8502 (Overview, Runs, Agent Analysis with recall, VRAM/Counters tabs; hygiene tags)
+
+# Individual
+python examples/agent_retrieval_rank_demo.py --log   # logs recall/latency for dashboard
+python test_full_sync.py
+export GPUOS_NVRTC_ARCH=compute_120 ; timeout 30 ./build/persistent_jit || echo TIMEOUT
+python benchmarks/run_all_benchmarks.py --skip-mps --skip-mig --visualize   # still works; harness can --include-bench
 ```
+See experiments/README.md + GPUOS-Baseline-Documented-Arc-2026-06.md for the testing infra rationale (covers twists via experiment tracking + dashboard modeled on sudoku runs).
 
 ## Current Known Issues (as of latest)
 - `persistent_jit` reaches NVRTC success for op_mul but hangs in `cuModuleLoadDataEx` inside `load_op_mul_ptr_from_ptx`.
@@ -50,7 +64,7 @@ nvidia-smi --query-gpu=memory.used,memory.total --format=csv -l 1
 - For experiments, use isolated worktrees via subagents.
 - Add `[DEBUG]` prints liberally during exploration; remove or gate them for production.
 - When instrumenting, ensure a "baseline only" path exists that produces numbers and exits cleanly.
-- After changes: rebuild, run with timeout + nvidia-smi, capture output, update the mapping/checklist docs.
+- After changes: rebuild (exact AGENTS), run with timeout (or full `python experiments/run_all_gpuos_tests.py ...`), capture output (internal structured [VRAM]/counters from direct poll + print_vram + timings; see harness), update the mapping/checklist/AGENTS/experiments/README docs + view dashboard for history. Review `git diff`. (Optional manual nvidia-smi -l 1 in another terminal for live machine view during long/unattended runs e.g. speed queries -- not required or used in standard verification/harness; results will be what they are from internal per plan/feedback.)
 - Use subagents: "explore" for digging into code, "plan" for next phases, "general-purpose" for implementation.
 - Share knowledge with other agents (e.g., Hermes) via context layer and this AGENTS.md.
 
@@ -60,10 +74,12 @@ nvidia-smi --query-gpu=memory.used,memory.total --format=csv -l 1
 - Review all diffs (`git diff`) before committing/pushing.
 
 ## Next Priorities (update as we progress)
-- Complete Phase 0 baseline capture with current instrumentation.
-- Debug/fix the hang in cuModuleLoadDataEx for full JIT path.
-- Move to Phase 1: minimal atomic counter layer + re-measure VRAM impact.
-- Add more structured output from persistent_jit for future instrumentation (counters, timings per stage, etc.).
+- [done] Complete Phase 0 baseline capture with current instrumentation + granular debug (hang point identified; baseline always clean).
+- Debug/fix the hang in cuModuleLoadDataEx for full JIT path (still protected by baseline force-exit; pre-launch load succeeds).
+- [done in this session] Move to Phase 1: minimal atomic counter layer (SyncState host-mapped zero-copy + direct poll + submitted tracking + cudaMemGetInfo) wired in persistent_jit + re-measure VRAM impact (layer adds ~0 device MiB; baseline metrics identical).
+- Add more structured output from persistent_jit for future instrumentation (counters, timings per stage, etc.) — Phase 1 added [VRAM] + sync counter dumps in baseline; clock64 can be next.
+- **Achievable end state on the board (agent accuracy/utility)**: See approved plan + .tasks/phase2-agent-endstate.md + examples/agent_retrieval_rank_demo.py + `GPUOS-Baseline-Documented-Arc-2026-06.md` (local) + vault master `GPUOS-Phase2-EndState-Baseline-2026-06.md`. GPUOS + Triton for custom ranking/scoring primitives in agent loops (generalizes original "sorting" from WASM-VM limits). Primary: retrieval/candidate ranking with Triton topk (builds on attention "scoring many" + scheduler per-turn patterns). Measure latency/candidates (utility) + quality proxy (accuracy). Phase 0/1 is the foundation (low overhead proof + reliable baseline). Brainstormed alternatives: per-step verifier, planning scores, long-running agent server, etc. For major baseline/arc docs: also write to Obsidian (source of truth) + local summary + Structured Context Layer (context_record, namespace "gpuos").
+- Update AGENTS when conventions change (e.g. "SyncState is the minimal atomic counter layer for efficient polling"; "Triton + GPUOS for agent custom algos / ranking primitives").
 
 Update this file when conventions or decisions change.
 
