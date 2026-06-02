@@ -43,7 +43,9 @@ cd experiments
 # then browse http://localhost:8502 (Overview, Runs, Agent Analysis with recall, VRAM/Counters tabs; hygiene tags)
 
 # Individual
-python examples/agent_retrieval_rank_demo.py --log   # logs recall/latency for dashboard
+# For real GPUOS scheduler path + actual metrics in agent demo (real-world candidate ranking use case):
+#   source .venv/bin/activate   # or use .venv/bin/python (has torch nightly for sm_120 support)
+python examples/agent_retrieval_rank_demo.py --log   # logs recall/latency for dashboard (real when .venv)
 python test_full_sync.py
 export GPUOS_NVRTC_ARCH=compute_120 ; timeout 30 ./build/persistent_jit || echo TIMEOUT
 python benchmarks/run_all_benchmarks.py --skip-mps --skip-mig --visualize   # still works; harness can --include-bench
