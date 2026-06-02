@@ -26,6 +26,11 @@ cd experiments
 # 3. In another term, run the test harness (exercises jit baseline, agent demo, py tests, logs results)
 python run_all_gpuos_tests.py --include-jit --include-agent --timeout 120
 
+# 4. (Optional but great) Terminal pop-up of what the GPU actually did in that run (from the internal prints/counters the code emitted)
+python viz_gpu_activity.py --latest
+python viz_gpu_activity.py --track jit-baseline --latest   # timeline, 5ms/0-delta/sync, FINAL note
+python viz_gpu_activity.py --track agent-ranking --latest # utility/accuracy + "end state on the board" recap
+
 # Results appear in experiments/results/ and in the dashboard on reload.
 # (Optional, human-driven only for live view e.g. machine speed queries during unattended): nvidia-smi -l 1 in another terminal. Standard results use internal [VRAM]/counters from code (harness + dashboard). See plan.md.
 ```
@@ -38,6 +43,7 @@ See AGENTS.md for the "Test & Dashboard Commands" section (added as part of this
 - gpuos_experiment_logger.py : Python logger (always writes json; optional surreal connect; helpers for parsing jit output, bench results, agent runs)
 - run_all_gpuos_tests.py : Master harness (timeout-safe runs of C++ tests, py smokes, agent demo w/ trials+recall, jit baseline with force protection + parse, bench subset; auto-logs; asserts baseline clean + exit 0 + reasonable counters/recall)
 - start_gpuos_dashboard.sh + docker-compose.yml (adapted from sudoku setup; port 8502)
+- viz_gpu_activity.py : terminal "pop-up" visualizer (ascii boxes, progress bars, timeline from raw snippets, agent purpose). Run after any test for quick view of the GPU work (jit stages + SyncState + vram deltas, or agent recall/latency). Pure, reuses data layer, internal-only.
 - (scripts/ for future log_run etc.)
 
 ## Data Shape (example, see logger)

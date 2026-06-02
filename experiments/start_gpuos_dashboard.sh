@@ -24,6 +24,7 @@ echo ""
 echo "Press Ctrl+C to stop the dashboard."
 echo "After start, open http://localhost:8502 and explore Runs, Agent Analysis, VRAM/Counters tabs."
 echo "New results/*.json dropped in experiments/results/ will appear on reload."
+echo "Companion: in another shell, 'python ../viz_gpu_activity.py --latest' (or --track jit-baseline) for terminal pop-up of GPU activity from the same internal data."
 echo ""
 
 exec python3 -m streamlit run dashboard/app.py --server.port 8502 --server.headless false

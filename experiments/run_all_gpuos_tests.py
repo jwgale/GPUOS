@@ -155,6 +155,14 @@ def main():
     print("Results logged to experiments/results/ (view with dashboard)")
     print("="*60)
     logger.log_run(exp_id, success=(passed == total), notes=summary, engine="harness")
+
+    # Terminal "pop up" for the GPU work done in this run (internal telemetry only)
+    print("\n[terminal viz] Quick GPU activity view for what just ran on the GPU:")
+    print("  python experiments/viz_gpu_activity.py --latest")
+    print("  python experiments/viz_gpu_activity.py --track jit-baseline --latest")
+    print("  python experiments/viz_gpu_activity.py --track agent-ranking --latest")
+    print("  (or --json <specific> ; see script --help. Complements the Streamlit dashboard.)")
+
     return 0 if passed == total else 1
 
 if __name__ == "__main__":

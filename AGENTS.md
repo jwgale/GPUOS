@@ -47,6 +47,12 @@ python examples/agent_retrieval_rank_demo.py --log   # logs recall/latency for d
 python test_full_sync.py
 export GPUOS_NVRTC_ARCH=compute_120 ; timeout 30 ./build/persistent_jit || echo TIMEOUT
 python benchmarks/run_all_benchmarks.py --skip-mps --skip-mig --visualize   # still works; harness can --include-bench
+
+# Terminal "pop-up" viz of GPU activity for a specific run (from internal SyncState + [VRAM] prints only)
+python experiments/viz_gpu_activity.py --latest
+python experiments/viz_gpu_activity.py --track jit-baseline --latest   # shows 5ms/0-delta/256/heartbeat + timeline from raw
+python experiments/viz_gpu_activity.py --track agent-ranking --latest # recall/latency + end-state purpose
+# (also --json <path> or --list; run right after the cmds above for "what the GPU did")
 ```
 See experiments/README.md + GPUOS-Baseline-Documented-Arc-2026-06.md for the testing infra rationale (covers twists via experiment tracking + dashboard modeled on sudoku runs).
 
