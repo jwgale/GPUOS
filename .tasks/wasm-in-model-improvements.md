@@ -143,3 +143,25 @@ For 12x12: The C solver would need ~ (12/9)^2 ~1.78x cells, but constraint logic
 
 This directly explores the train of thought: yes, multiple modular VMs inside the model can help scaling while preserving the core "imperfect model, perfect embedded execution" magic.
 
+**Easy split exercise for multi-VM demo (2026-06)**:
+- Created transformer_vm/examples/split_exercise.c :
+  - Part 1 "Producer/Writer" (client-like): fills shared buffer[8] with 1..8 ( "sending data to DB/file").
+  - Part 2 "Consumer/Reader" (server-like): reads the buffer and sums it ( "processing from DB").
+  - Shared 'buffer' is the communication/swap space.
+  - All in one program (composition) so one lowered unit the model executes.
+- Compile: 392 instructions (small!).
+- Run: "output: result: 36" (correct, 1+..+8=36). 5,029 runtime tokens, 0.12s.
+- This is a simple, non-web client/server split perfect for trying "2 VMs".
+
+**"How many VMs at any given time?" experiment (2026-06)**:
+- Ran 5 programs together: hello + addition + fibonacci + collatz + split_exercise.
+- Explicitly: "5 program(s) to run" / "Running 5 program(s) via C++ engine".
+- All processed in one model load (sequential execution traces, but shared model context).
+- Total batch: ~64k tokens, 1.47s. Each small one stayed cheap and correct where applicable.
+- The split_exercise still produced "result: 36" correctly in the batch.
+- Current practical: At least 5-8+ small purpose-built programs per model invocation (limited by total trace length + command-line practicality).
+- During one generation pass: one program's trace at a time.
+- For "simultaneous" tightly-coupled: Compose into one program with shared memory + internal "scheduler" (as in split_exercise and multi_vm_demo). Number limited by total lowered instructions fitting the reliable placement/execution "limit area" (~ low thousands of instructions per coherent unit for complex logic, based on 9x9 Sudoku ~7.5k being the demonstrated non-trivial example).
+
+This shows the user's idea scales the inside-model approach: many small verified "VMs"/modules composed or batched, keeping each under the MILP + trace limits while building larger functionality.
+

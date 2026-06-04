@@ -90,3 +90,14 @@ The user's idea of multiple VMs (client/server with shared "DB"/file) is a natur
 
 This directly addresses the computational limit question while keeping the fascinating "inside model" verifiable execution.
 
+**Using multi-VM composition for the 12x12 solver (2026-06 update)**:
+To avoid the monolithic limit, split the 12x12 solver:
+- "State/DB" module: manages the board/candidates in shared memory (the "file").
+- "Search" module: does the backtracking/propagation, reading/writing the shared state.
+- "I/O" or "Validator" module: handles input puzzle and output/check.
+
+Each small → stays in the "easy to place + short trace" zone for high accuracy.
+Composition via the shared buffer (as proven in split_exercise and multi_vm_demo).
+
+Current multi-program support allows running the modules (or the composed solver + other helpers) together: demonstrated with 5 programs in one load ("5 program(s) to run").
+
