@@ -37,3 +37,12 @@ All changes follow AGENTS: re-read required docs, todos, exact build/run cmds wh
 - `examples/agent_retrieval_rank_demo.py` (the Triton sketch comment block)
 - `pytorch_ext/gpuos_ext.cpp` (the load bridge and current topk "for now" hybrid)
 - `pytorch_ext/scheduler.py` (aten::topk interception + elementwise exprs)
+
+## Iteration 2 (autonomous)
+- Added `load_and_register_custom(ptx: str, entry_name: str, slot: int)` to gpuos_ext.cpp (and exposed via pybind).
+- Uses the existing `load_function_ptr_from_ptx` + `set_table_slot_async` (the exact bridge from the lab).
+- Rebuild tested via torch cpp_extension load in demo-style import (successful, new API present).
+- This enables taking PTX from the lab artifacts (or future real fused_score_topk) and wiring it into the persistent op table for use by scheduler/dispatch.
+- Docs updated in this README + phase2 progress + lab comments.
+- git diff reviewed, committed, pushed as tight "feat(gpuos_ext): expose load_and_register_custom for Triton PTX".
+- Ties directly to course Module 4 and phase2 "extend ... for Triton PTX registration".

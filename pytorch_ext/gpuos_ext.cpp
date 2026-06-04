@@ -1070,6 +1070,23 @@ void submit_topk(int slot, torch::Tensor x, torch::Tensor values, torch::Tensor 
   enqueue_task_host_to_device(t);
 }
 
+// --- Custom Triton / PTX support (autonomous iteration 2) ---
+// Exposes loading of pre-compiled PTX (from triton.compile or NVRTC) and registering
+// into the persistent op table. This is the direct follow-on from the Triton lab
+// (Module 4 bridge): "feed the ptx bytes to the exact same driver code".
+// Ties to phase2 goal: enable real @triton.jit fused_score_topk etc. in the scheduler
+// + persistent path, replacing the current hybrid (expr scoring + torch topk + dummy).
+void load_and_register_custom(const std::string& ptx, const std::string& entry_name, int slot) {
+  TORCH_CHECK(g_started, "gpuos not initialized");
+  std::vector<char> ptx_vec(ptx.begin(), ptx.end());
+  auto fn_addr = load_function_ptr_from_ptx(ptx_vec, entry_name.c_str());
+  set_table_slot_async(slot, fn_addr);
+  if (g_verbose_level > 0) {
+    fprintf(stderr, "[host] registered custom kernel '%s' (PTX len=%zu) to slot %d\n",
+            entry_name.c_str(), ptx.size(), slot);
+  }
+}
+
 } // namespace gpuos_ext
 
 // Pybind11 module must be at global scope
@@ -1097,6 +1114,13 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("submit_reduce", &submit_reduce, "Submit reduce task (axes, keepdim)");
   m.def("register_topk", &register_topk, "Register topk op and return slot");
   m.def("submit_topk", &submit_topk, "Submit topk task (k, dim, largest, sorted)");
+
+  // Custom PTX/Triton kernel registration (autonomous iter 2)
+  // Allows loading PTX from triton.compile (or manual) and wiring into g_op_table.
+  // Used with the Triton lab artifacts + future fused_score_topk.
+  m.def("load_and_register_custom", &load_and_register_custom,
+        "Load PTX bytes (from Triton or NVRTC) and register fn into op table at slot. "
+        "See experiments/triton_labs/ and gpuos_ext topk comments for usage in real ranking proto.");
 
   // Zero-copy synchronization API
   m.def("sync_poll_processed", [](){
