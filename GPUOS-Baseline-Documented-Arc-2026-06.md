@@ -323,3 +323,31 @@ All followed AGENTS (re-reads first, todos, exact cmds, baseline always protecte
 
 ---
 
+## Pause (2026-06, user decision)
+
+User: "i think i need to pause on this one for awhile here. I'm just not feeling this whole thing long term, or maybe i don't have enough understanding of microkernels and all this, but it is still a cool idea. I think i need to brainstorm another use case and get that off the ground and maybe there is something here to come back to later."
+
+**Why pause (user's words + context):** Not fully feeling the long-term direction. Possible gap in microkernel/persistent kernel intuition. Still sees it as a cool idea. Wants to explore/start a new use case first, with option to return.
+
+**State at pause (for easy resume, per the deliberate resume mechanism in Sec 10 + this Arc):**
+- All prior sections (origin from WASM/sorting limits, pivot to GPU-side, Phase 0/1 baselines, BOTH positioning in Sec 11, Triton education gate, autonomous iters 1-4) remain valid.
+- Achieved: Solid low-overhead substrate (persistent + SyncState zero-copy + scheduler for custom small ops). MVP ranking demo "on the board" with 10+ logged runs. First Triton PTX bridge (lab + register helper + demo wiring). Full testing infra (harness, 82+ runs in dashboard, viz from internal only).
+- Key insight from last discussion: GPUOS provides strong observability *into the custom work you submit to it* (SyncState heartbeats/counters for scoring/ranking/verifiers, cheap host polls, no per-iter memcpy). It does *not* automatically give deep visibility into unmodified model internals (e.g., activations during a normal forward pass) — that would require explicit sharing of model state/pointers or model code publishing observations via the GPUOS queue. This is the current boundary (capabilities + proximity for *added* custom logic, not full model tracing).
+- Dashboard (http://localhost:8502) has the history: agent-ranking (10 runs), jit-baselines (9+), test harness noise. Viz and results/ preserve the traces.
+- Code state: See .tasks/phase2-agent-endstate.md (new Pause section with resume notes), experiments/triton_labs/ (lab + README), pytorch_ext/ updates, etc. Many docs updated.
+
+**Resume recipe (update of Sec 10 style):**
+1. cd to this worktree.
+2. git status / log (expect the autonomous commits + any pause docs).
+3. Re-read: AGENTS.md, this Arc (esp Sec 11 + this pause + autonomous note), .tasks/phase2 (Pause section), triton_labs/README, recent dashboard runs.
+4. Run: viz --latest, harness (or parts), dashboard.
+5. context_init / query for "gpuos pause" or end-state.
+6. The foundation + first Triton wiring + testing story is ready. Pick from Sec 11 examples or new brainstorm.
+7. Any questions on "what did we build?": the Arc + phase2 task + dashboard + viz header docs explain it.
+
+All work followed AGENTS (reads first, todos, context_record attempts, exact cmds, baseline protection, diff reviews before commits/pushes, harness/viz/dashboard after steps, thorough docs).
+
+This pause is recorded so any future session (Grok, Hermes, subagent) can pick up cleanly without re-explaining.
+
+---
+

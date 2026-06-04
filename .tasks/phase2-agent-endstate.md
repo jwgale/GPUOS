@@ -107,6 +107,29 @@ This is the achievable end state to shoot for now that Phase 0 (baseline always 
     - Autonomous iteration 2 (2026-06): Added load_and_register_custom(ptx, entry, slot) in gpuos_ext.cpp (wraps the exact load_function_ptr_from_ptx + set_table from the lab bridge). Exposed in pybind. Rebuild tested via .venv demo-style import (API present, binding works). Updated triton_labs/README + this progress. git diff reviewed before commit/push. This wires the lab PTX artifacts into the real op table for future use in scheduler/dispatch. Prepares wiring in next iters. Tight commit.
     - Autonomous iteration 3 (2026-06): Wired load_and_register_custom into agent_retrieval_rank_demo.py (toy PTX from lab concept + call after Triton note, with iter print). Demo run exercises author->register path end-to-end. Updated README + this progress. Run verification captured (iter 3 message printed). git diff reviewed. Commit/push with tight label. Makes "real Triton proto" tangible in the MVP demo runs logged to dashboard.
 
+## Pause (2026-06, user decision)
+
+User: "i think i need to pause on this one for awhile here. I'm just not feeling this whole thing long term, or maybe i don't have enough understanding of microkernels and all this, but it is still a cool idea. I think i need to brainstorm another use case and get that off the ground and maybe there is something here to come back to later."
+
+**Current achieved state (for clean resume):**
+- Phase 0/1 foundation: always 5ms baseline for 256 tasks, 0.0 MiB VRAM delta for SyncState layer, clean FINAL exits, internal telemetry (counters, heartbeats, [VRAM]) solid and visible in dashboard/viz.
+- Phase 2 MVP "on the board": agent_retrieval_rank_demo.py with scheduler for per-turn custom scoring + topk dispatch skeleton. 10 agent-ranking runs in dashboard (recall/latency proxies), 9+ jit-baselines. Full story from WASM limits preserved.
+- Triton bridge progress (autonomous iters without user input): 
+  - lab v2 in experiments/triton_labs/ with PTX extraction attempts, artifacts, bridge emphasis + README.
+  - load_and_register_custom in gpuos_ext.cpp (exact NVRTC path reuse).
+  - Wired into demo + iter prints.
+  - Verification: harness, --log runs, viz, new results logged.
+  - Docs updated across Arc, AGENTS, mapping, READMEs, course log.
+- Observability clarification: Excellent cheap visibility (SyncState zero-copy polls, heartbeats) *into submitted GPUOS work* (custom scoring/ranking/verifiers etc.). Not automatic deep introspection into unmodified model internals (matmuls, attention, activations) unless model code explicitly shares state/pointers or submits observation tasks to GPUOS. This is the current boundary (see recent conversation on "how would we see inside the model").
+
+**Resume notes:**
+- Re-read this file + AGENTS.md + Arc (esp Sec 11 handoff + autonomous iters note) + triton_labs/ + recent dashboard runs.
+- Baseline always protected.
+- The substrate + scheduler + first Triton wiring is in place. Observability for custom co-located work is proven.
+- When ready: pick from examples in Arc Sec 11 (verifier, long-running server, full op_topk, specific business case) or new brainstorm.
+
+All work followed AGENTS (reads, todos, context attempts, exact cmds, diff reviews, commits/pushes with tight labels, harness/viz/dashboard, no destructive).
+
 Proceed one step at a time. This is the target now that low-level is proved.
 
 (References: approved plan.md, user's query + clarification choosing A + "brainstorm" comment, subagent exploration summary on agent patterns in benches/paper, Phase1 .tasks for counters reuse.)
