@@ -176,3 +176,14 @@ This shows the user's idea scales the inside-model approach: many small verified
 
 This shows the multi-VM pattern works for simple producer/consumer without composing everything into one binary (though composition is also supported and smaller for tight interaction).
 
+**Larger batch for 'how many VMs' (2026-06)**:
+- Ran 6 programs in one load: producer + consumer (the split) + hello + addition + fibonacci + collatz.
+- "6 program(s) to run"
+- "Running 6 program(s) via C++ engine"
+- Split outputs appeared: PRODUCER_STATE and CONSUMER_RESULT: 36
+- Shows the architecture supports at least 6 purpose-built "VMs"/programs executing (their traces) within one model at "batch time". The limit for more is the cumulative token budget for all traces (collatz alone was ~44k, sudoku millions).
+
+This answers the curiosity: several (6+ demonstrated easily with small modules) can execute in the model via the runner's multi-program support.
+
+For tightly coupled parts like the split, using separate programs + external state handoff (as done with producer output conceptually feeding consumer) or composition in one program both work. The engine currently treats them as sequential executions.
+

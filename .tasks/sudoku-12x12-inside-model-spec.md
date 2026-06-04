@@ -109,3 +109,10 @@ Using the same multi-part pattern as the producer/consumer split:
 
 See the split_exercise execution for proof that separate parts produce their outputs (state write + result) when run together in one model load.
 
+**Running split parts for 12x12 (2026-06)**:
+As demonstrated with the producer/consumer split: you can lower the "state provider" and "solver" as separate .txt and run them together with `wasm-run state12.txt solver12.txt` ( "2 program(s) to run", "Running 2 program(s)").
+
+For more modules in the solver (e.g. 3-4 parts), batch them as shown in the 6-program experiment.
+
+This allows the large 12x12 logic to be split into purpose-built VMs while the model executes the parts (sequentially in current engine).
+
