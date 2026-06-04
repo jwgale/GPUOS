@@ -187,3 +187,10 @@ This answers the curiosity: several (6+ demonstrated easily with small modules) 
 
 For tightly coupled parts like the split, using separate programs + external state handoff (as done with producer output conceptually feeding consumer) or composition in one program both work. The engine currently treats them as sequential executions.
 
+**Higher 'how many' demonstration (2026-06)**:
+- Batch command with producer + consumer + 4 others = 6 programs.
+- Confirmed "6 program(s) to run" and "Running 6 program(s) via C++ engine".
+- All parts executed, split outputs produced.
+- The runner supports * (all matching .txt), and data dir has ~9-10 small ones (excluding our split and large like sudoku/sudoku12).
+- Practical: easily 6-10+ small purpose-built "VMs" (each a few hundred instructions) can be executed in one model load. Larger ones (like full 9x9 ~7.5k instr) reduce the number due to trace cost.
+
