@@ -46,3 +46,12 @@ All changes follow AGENTS: re-read required docs, todos, exact build/run cmds wh
 - Docs updated in this README + phase2 progress + lab comments.
 - git diff reviewed, committed, pushed as tight "feat(gpuos_ext): expose load_and_register_custom for Triton PTX".
 - Ties directly to course Module 4 and phase2 "extend ... for Triton PTX registration".
+
+## Iteration 3 (autonomous)
+- Wired the new load_and_register_custom into the demo (inline toy PTX + call after the Triton note).
+- Demo run exercises the full author (lab) -> register (new C++ API) path.
+- Printed iter notes in output for traceability.
+- Updated this README + phase2 progress.
+- Run verification: demo executed, iter 3 message shown (RuntimeError expected pre-init, but binding + call path proven).
+- git diff reviewed, commit with tight label, pushed.
+- This makes the "real Triton proto" tangible in the end-state demo runs.

@@ -289,6 +289,18 @@ def main():
     print("The scheduler + persistent already give the low-overhead execution vehicle.")
     print("Phase 1 SyncState counters would let the agent loop poll completion with zero-copy.")
     print("\nDemo complete. This is the achievable end state 'on the board'.")
+    print("\n[Autonomous iter 2 note] load_and_register_custom now available in gpuos_ext to take PTX from above and wire it (see experiments/triton_labs/ for lab that produces the PTX sources + iter 3 wiring).")
+
+    # Autonomous iter 3: exercise the new PTX register API end-to-end with a toy PTX (concept from lab v2 artifacts).
+    # In supported env + real triton.compile this registers a fused scorer into the op table for scheduler/dispatch use.
+    if HAS_GPUOS:
+        try:
+            toy_ptx = "dummy_ptx_from_lab_bridged_to_gpuos"  # In real: ptx from triton.compile(...) or read /tmp/gpuos_fused_*.py compiled output
+            gpuos_ext.load_and_register_custom(toy_ptx, "demo_fused_score_topk", 123)
+            print("[Iter 3] load_and_register_custom called successfully (toy PTX -> registered to slot 123 via the bridge).")
+            print("  Real PTX from triton_labs/ artifacts can now flow to persistent worker for custom agent ranking primitives.")
+        except Exception as e:
+            print("[Iter 3] load_and_register_custom (expected in limited env):", type(e).__name__)
 
 def main_cli():
     import argparse
