@@ -127,3 +127,19 @@ This gives a concrete anchor: ~2.23M tokens / ~57s / depth 45 for 9x9 with the c
 
 For 12x12: The C solver would need ~ (12/9)^2 ~1.78x cells, but constraint logic and search depth grow much faster (bigger domains, more units). Expect token count 4-10x+ , much deeper search, MILP placement time potentially hours or infeasible without improvements.
 
+**Multi-VM / Modular Composition Example (2026-06, to address scaling via multiple small VMs)**:
+- Created transformer_vm/examples/multi_vm_demo.c : "DB server" module (shared buffer for write/read) + "client" module that uses it to store 42+99 and compute sum.
+- All in *one* lowered program (composition at C/WASM level via shared linear memory "file").
+- Compile: 374 instructions (tiny!).
+- Run: 
+  - output: "result: 141" (exactly correct from the composed logic).
+  - 6,362 runtime tokens, 999 ops, 0.15s (very cheap).
+  - Even with "MISMATCH" in ref check (no _ref for this demo), the *observable result of the computation* is perfect.
+- This shows the user's client/server idea works at small scale: modules communicate via shared "DB"/file, composed into one reliably executable unit inside the model.
+- Benefits for scaling: Keep each "VM"/module small enough to stay under MILP placement and reliable execution limits, while building larger functionality through composition. The high-accuracy/verifiable property can apply per module or to the whole if the composition logic is also correct.
+- The current runner already supports running *multiple independent programs* in one model load ("2 program(s) to run"), though they are sequential and not sharing state unless composed as above.
+- For even more separation (true separate address spaces), the engine could be extended with multi-process support + shared segment, but the in-one-program composition already bears significant fruit without engine changes.
+- Connection to 12x12: A large solver could be split into "search module" + "constraint module" + "IO module" sharing buffers, keeping each under limits.
+
+This directly explores the train of thought: yes, multiple modular VMs inside the model can help scaling while preserving the core "imperfect model, perfect embedded execution" magic.
+
