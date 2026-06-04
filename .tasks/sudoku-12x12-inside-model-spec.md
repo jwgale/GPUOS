@@ -80,3 +80,13 @@ Next immediate action (after user feedback): I will write the initial 12x12 C sk
 
 This is promising for starting the inquiry: even a basic version is smaller in instructions than the fancy 9x9 one. Next: add a sample 12x12 puzzle, attempt full lower + run (or at least token count + scheduler dry-run), compare search behavior.
 
+**Multi-VM Composition for 12x12 Scaling (added 2026-06)**:
+The user's idea of multiple VMs (client/server with shared "DB"/file) is a natural way to scale beyond monolithic program limits.
+- We demonstrated a small "DB + client" composition in one program: 374 instructions, model correctly executes the logic and outputs "result: 141".
+- For a 12x12 solver: Split into e.g. "board state manager" module + "search/propagation" module + "I/O" module, sharing a memory region for the grid and candidates. Each module small -> easier MILP + reliable execution. The whole still one lowered unit or multiple linked by the engine.
+- Current runner already runs multiple programs sequentially in one model load.
+- This preserves the core property: each module's execution can be verifiable/high-accuracy inside the model.
+- Potential hybrid with paused GPUOS: a "DB" module could use fast custom GPU kernels for bulk ops on the shared state.
+
+This directly addresses the computational limit question while keeping the fascinating "inside model" verifiable execution.
+
