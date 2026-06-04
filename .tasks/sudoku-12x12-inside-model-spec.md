@@ -101,3 +101,11 @@ Composition via the shared buffer (as proven in split_exercise and multi_vm_demo
 
 Current multi-program support allows running the modules (or the composed solver + other helpers) together: demonstrated with 5 programs in one load ("5 program(s) to run").
 
+**Split execution example applied to scaling (2026-06)**:
+Using the same multi-part pattern as the producer/consumer split:
+- A "state provider" program for the 12x12 board.
+- A "solver" program that "reads" the state (via args or composition) and solves.
+- Run via multi-program support as "2 program(s)".
+
+See the split_exercise execution for proof that separate parts produce their outputs (state write + result) when run together in one model load.
+

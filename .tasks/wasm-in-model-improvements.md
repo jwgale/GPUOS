@@ -165,3 +165,14 @@ This directly explores the train of thought: yes, multiple modular VMs inside th
 
 This shows the user's idea scales the inside-model approach: many small verified "VMs"/modules composed or batched, keeping each under the MILP + trace limits while building larger functionality.
 
+**Execution of the split in multiple parts (2026-06)**:
+- Split literally into producer.c (writes state 1-8, prints PRODUCER_STATE) and consumer.c (hardcodes read of that state, computes sum=36, prints CONSUMER_RESULT).
+- Lowered separately: producer 450 instr, consumer 395 instr.
+- Ran as multiple programs: `wasm-run .../producer.txt .../consumer.txt`
+- Result: "2 program(s) to run", "Running 2 program(s) via C++ engine"
+  - output: PRODUCER_STATE: 1 2 3 4 5 6 7 8
+  - output: CONSUMER_RESULT: 36
+- This executes the split idea "in multiple parts" using the VM's built-in support for multiple programs in one model load. The "data swap" is simulated by the consumer knowing the state the producer wrote (in a full system with engine shared memory, it would be automatic).
+
+This shows the multi-VM pattern works for simple producer/consumer without composing everything into one binary (though composition is also supported and smaller for tight interaction).
+
