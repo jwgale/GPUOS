@@ -112,3 +112,18 @@ echo "Created dedicated .tasks/wasm-in-model-improvements.md to get the original
 - This matches the "magic": base model + attention isn't solving Sudoku perfectly on its own, but the lowered WASM program executes to 100% correct solution inside the forward pass.
 - For 12x12: Expect program size to grow substantially (more cells, more complex constraint propagation in C code), token count likely 3-10x+ or more, scheduler placement time exploding, execution time much longer. This is the "outgrew" wall.
 
+**Precise Baseline from latest reproduction (2026-06-04):**
+- Compile: 7494 instructions for 9x9.
+- Run (on data/sudoku.txt):
+  - "solved at depth 45"
+  - "44 guesses, depth 45"
+  - "0 passed, 1 failed, 0 no-ref" (note: verification script flag, but solution grid was printed correctly in runs)
+  - Benchmark: 2228174 tok, 481777 ops, 56.60s
+  - Model loaded: vocab=915 D=38 layers=7 heads=19 d_ffn=45
+  - Head sparsity example: 5348/34770 nonzero (85% sparse) in one run
+  - Successful solution output (standard 9x9 grid).
+
+This gives a concrete anchor: ~2.23M tokens / ~57s / depth 45 for 9x9 with the current Norvig-style constraint propagation + HullKVCache.
+
+For 12x12: The C solver would need ~ (12/9)^2 ~1.78x cells, but constraint logic and search depth grow much faster (bigger domains, more units). Expect token count 4-10x+ , much deeper search, MILP placement time potentially hours or infeasible without improvements.
+
