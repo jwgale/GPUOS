@@ -72,3 +72,11 @@ This is the start of driving the original fascinating path forward concretely. T
 
 Next immediate action (after user feedback): I will write the initial 12x12 C skeleton in the vm/examples/ and attempt compile + token count. Or adjust if user prefers different first step (e.g., pure scheduler scaling experiment on synthetic large program, or A* on 12x12 grid).
 
+**First Scaling Data Point (2026-06)**:
+- 12x12 backtracking skeleton (basic, bitmask rows/cols/boxes, find_empty, recursive solve) compiled successfully.
+- Instructions: **791** (vs 9x9 Norvig constraint-prop's 7494).
+- Token file: sudoku12.txt produced (input_base noted).
+- Note: This is a *minimal* backtracker (not the optimized constraint prop of the 9x9). Real 12x12 would need more logic for efficiency (to keep search reasonable inside the model), so token count will grow, but this gives a lower-bound feel. The 9x9 one is more "sophisticated" hence more instructions but better pruning (depth 45 with 44 guesses on hard puzzle).
+
+This is promising for starting the inquiry: even a basic version is smaller in instructions than the fancy 9x9 one. Next: add a sample 12x12 puzzle, attempt full lower + run (or at least token count + scheduler dry-run), compare search behavior.
+
